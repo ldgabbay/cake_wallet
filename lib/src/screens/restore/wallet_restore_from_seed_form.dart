@@ -102,6 +102,13 @@ class WalletRestoreFromSeedFormState extends State<WalletRestoreFromSeedForm> {
       _changeLanguage('English');
     });
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.type == WalletType.monero && (widget.restoredWallet?.height ?? 0) != 0) {
+        blockchainHeightKey.currentState?.restoreHeightController.text =
+            widget.restoredWallet!.height.toString();
+      }
+    });
+
     super.initState();
   }
 

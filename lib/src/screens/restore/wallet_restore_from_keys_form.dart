@@ -109,10 +109,9 @@ class WalletRestoreFromKeysFormState extends State<WalletRestoreFromKeysForm> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.restoredWallet?.height != null) {
-        blockchainHeightKey.currentState?.restoreHeightController.text =
-            widget.restoredWallet!.height.toString();
-      }
+      final wallet = widget.restoredWallet;
+      if (wallet?.height == null || wallet!.needsHeight) return;
+      blockchainHeightKey.currentState?.restoreHeightController.text = wallet.height.toString();
     });
 
     viewKeyController.addListener(() {

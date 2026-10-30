@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:cake_wallet/view_model/restore/restore_mode.dart';
 import 'package:cw_core/utils/zpub.dart';
 import 'package:cw_core/wallet_type.dart';
+import 'package:polyseed/polyseed.dart';
 
 class RestoredWallet {
   RestoredWallet(
@@ -39,6 +40,16 @@ class RestoredWallet {
   final String? recipientName;
   final int? height;
   final String? privateKey;
+
+  // A Monero restore needs a real height, or it scans the whole chain. Polyseeds
+  // carry their own.
+  bool get needsHeight {
+    if (type != WalletType.monero || (height ?? 0) != 0) return false;
+    if (restoreMode == WalletRestoreMode.seed) {
+      return !Polyseed.isValidSeed(mnemonicSeed ?? '');
+    }
+    return restoreMode == WalletRestoreMode.keys;
+  }
 
   factory RestoredWallet.fromKey(Map<String, dynamic> json) {
     try {
