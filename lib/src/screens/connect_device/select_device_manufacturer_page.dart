@@ -81,6 +81,14 @@ class SelectDeviceManufacturerPage extends BasePage {
           hardwareWalletType: HardwareWalletType.coldcard,
           // tag: S.current.new_tag,
         ),
+        _DeviceManufacturer(
+          image: SvgPicture.asset(
+            'assets/images/hardware_wallet/keystone_man.svg',
+            height: 25,
+            colorFilter: _colorFilter,
+          ),
+          hardwareWalletType: HardwareWalletType.keystone,
+        ),
         // _DeviceManufacturer(
         //   image: SvgPicture.asset(
         //     'assets/images/hardware_wallet/seedsigner_man.svg',
@@ -120,14 +128,6 @@ class SelectDeviceManufacturerPage extends BasePage {
         _DeviceManufacturer(
           image: SvgPicture.asset(
             'assets/images/hardware_wallet/foundation_man.svg',
-            height: 25,
-            colorFilter: _colorFilter,
-          ),
-          tag: S.current.coming_soon_tag,
-        ),
-        _DeviceManufacturer(
-          image: SvgPicture.asset(
-            'assets/images/hardware_wallet/keystone_man.svg',
             height: 25,
             colorFilter: _colorFilter,
           ),
