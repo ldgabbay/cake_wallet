@@ -443,7 +443,7 @@ class _ScanPageState extends State<ScanPage> {
   void _handleBarcodeInternal(BarcodeCapture barcodes) {
     for (final barcode in barcodes.barcodes) {
       if (barcode.rawValue?.trim().isEmpty ?? false == false) continue;
-      if (barcode.rawValue!.startsWith("ur:")) {
+      if (isURFrame(barcode.rawValue!)) {
         if (urCodes.contains(barcode.rawValue)) continue;
         decoder.receivePart(barcode.rawValue!);
         setState(() {

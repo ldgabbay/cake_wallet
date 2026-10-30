@@ -84,7 +84,7 @@ class _BarcodeScannerSimpleState extends State<BarcodeScannerSimple> {
     for (final barcode in barcodes.barcodes) {
       // don't handle unknown QR codes
       if (barcode.rawValue?.trim().isEmpty ?? false == false) continue;
-      if (barcode.rawValue!.startsWith("ur:")) {
+      if (isURFrame(barcode.rawValue!)) {
         if (urCodes.contains(barcode.rawValue)) continue;
         decoder.receivePart(barcode.rawValue!);
         setState(() {
@@ -295,6 +295,9 @@ class URQRData {
     };
   }
 }
+
+// UR is case-insensitive and Keystone shows its first frame in uppercase.
+bool isURFrame(String frame) => frame.length >= 3 && frame.substring(0, 3).toLowerCase() == "ur:";
 
 URQRData URQRToURQRData(List<String> urqr_) {
   final urqr = urqr_.toSet().toList();
