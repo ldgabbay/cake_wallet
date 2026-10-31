@@ -366,8 +366,36 @@ abstract class MoneroWalletBase
   // Where the export awaiting key images starts in the wallet's outputs.
   int activeExportOffset = 0;
 
+  // The most outputs in one Keystone key image request. An estimate, since no
+  // wallet has yet reached this many outputs on a real device.
+  //
+  // The firmware refuses requests over MAX_REQUEST_BYTES, 14 * 1024 = 14336
+  // bytes (keystone3-firmware rust/apps/monero/src/utils/io.rs:10).
+  //
+  // Each output costs about 81 bytes in wallet2's exported_transfer_details:
+  //   1      version
+  //   32     output public key
+  //   1-2    internal output index (varint)
+  //   4-5    global output index (varint)
+  //   32     transaction public key
+  //   1      flags
+  //   6-9    amount (varint)
+  //   1      additional tx key count
+  //   2-3    subaddress index (varints)
+  // plus 32 for each additional tx key. Those keys appear on transactions
+  // paying subaddresses, usually one per transaction output.
+  //
+  // The encrypted envelope adds about 160 bytes, so with no additional keys
+  // (14336 - 160) / 81 = 175 outputs fit. 150 outputs need about 12310 bytes,
+  // which leaves about 2000 bytes, or room for about 60 additional keys.
+  // Exceeding that makes the device refuse the request, and nothing is lost.
+  static const keystoneExportOutputLimit = 150;
+
   Map<String, String> exportOutputsUR() {
-    final (offset, count, str) = currentWallet!.exportOutputsURWithOffset(all: false);
+    final isKeystone = hardwareWalletType == HardwareWalletType.keystone;
+    final (offset, count, str) = isKeystone
+        ? currentWallet!.exportOutputsURWithOffset(all: false, count: keystoneExportOutputLimit)
+        : currentWallet!.exportOutputsURWithOffset(all: false);
     int status = currentWallet!.status();
     if (status != 0) {
       final err = currentWallet!.errorString();
@@ -375,7 +403,7 @@ abstract class MoneroWalletBase
     }
     activeExportOffset = offset;
     // Keystone keeps no output list, so a partial export always suffices.
-    if (hardwareWalletType == HardwareWalletType.keystone) {
+    if (isKeystone) {
       return {"Requesting Key Images $offset-${offset + count - 1} ($count)": str};
     }
     final strAll = currentWallet!.exportOutputsUR(all: true);
