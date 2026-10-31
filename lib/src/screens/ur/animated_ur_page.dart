@@ -11,6 +11,7 @@ import 'package:cake_wallet/src/widgets/alert_with_one_action.dart';
 import 'package:cake_wallet/src/widgets/primary_button.dart';
 import 'package:cake_wallet/utils/show_pop_up.dart';
 import 'package:cake_wallet/view_model/animated_ur_model.dart';
+import 'package:cw_core/wallet_info.dart';
 import 'package:cw_core/wallet_type.dart';
 import 'package:flutter/material.dart';
 
@@ -51,11 +52,24 @@ class AnimatedURPage extends BasePage {
     return first.split('/')[0];
   }
 
+  String? get purpose {
+    if (urQrType == "ur:xmr-output") {
+      return animatedURmodel.wallet.hardwareWalletType == HardwareWalletType.keystone
+          ? urQr.keys.first
+          : "Requesting Key Images";
+    }
+    if (["ur:xmr-txunsigned", "ur:psbt", BBQR.header].contains(urQrType)) {
+      return "Requesting Transaction Signing";
+    }
+    return null;
+  }
+
   @override
   Widget body(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (purpose != null) Text(purpose!, textAlign: TextAlign.center),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
           child: URQR(

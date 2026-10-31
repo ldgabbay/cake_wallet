@@ -367,7 +367,7 @@ abstract class MoneroWalletBase
   int activeExportOffset = 0;
 
   Map<String, String> exportOutputsUR() {
-    final (offset, str) = currentWallet!.exportOutputsURWithOffset(all: false);
+    final (offset, count, str) = currentWallet!.exportOutputsURWithOffset(all: false);
     int status = currentWallet!.status();
     if (status != 0) {
       final err = currentWallet!.errorString();
@@ -376,7 +376,7 @@ abstract class MoneroWalletBase
     activeExportOffset = offset;
     // Keystone keeps no output list, so a partial export always suffices.
     if (hardwareWalletType == HardwareWalletType.keystone) {
-      return {"Outputs (partial)": str};
+      return {"Requesting Key Images $offset-${offset + count - 1} ($count)": str};
     }
     final strAll = currentWallet!.exportOutputsUR(all: true);
     status = currentWallet!.status();
