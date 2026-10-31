@@ -42,6 +42,7 @@ import "package:cake_wallet/reactions/wallet_connect.dart";
 import "package:cake_wallet/routes.dart" show Routes;
 import "package:cake_wallet/src/screens/connect_device/connect_device_page.dart";
 import "package:cake_wallet/src/widgets/alert_with_one_action.dart";
+import "package:cake_wallet/src/widgets/alert_with_two_actions.dart";
 import "package:cake_wallet/src/widgets/cake_image_widget.dart";
 import "package:cake_wallet/src/widgets/new_list_row/list_item_regular_row_widget.dart";
 import "package:cake_wallet/src/widgets/standard_checkbox.dart";
@@ -63,6 +64,8 @@ import "package:cw_core/lnurl.dart";
 import "package:cw_core/transaction_priority.dart";
 import "package:cw_core/unspent_coin_type.dart";
 import "package:cw_core/utils/print_verbose.dart";
+import "package:cw_core/sync_status.dart";
+import "package:cw_core/wallet_info.dart";
 import "package:cw_core/wallet_type.dart";
 import "package:flutter/cupertino.dart";
 import "package:flutter/material.dart";
@@ -269,6 +272,8 @@ class _NewSendPageState extends State<NewSendPage> {
       });
     }
 
+    WidgetsBinding.instance.addPostFrameCallback((_) => _requireKeystoneKeyImages());
+
     if (widget.mode == SendPageModes.normal) {
       _deepLinkSubscription = widget.linkViewModel.incomingPaymentLinks.listen((link) async {
         if (!mounted) {
@@ -298,6 +303,46 @@ class _NewSendPageState extends State<NewSendPage> {
         await _resolveAddressForOutput(output);
       }
     });
+  }
+
+  bool get _needsKeystoneKeyImages {
+    final wallet = widget.sendViewModel.wallet;
+    return wallet.type == WalletType.monero &&
+        wallet.hardwareWalletType == HardwareWalletType.keystone &&
+        wallet.syncStatus is SyncedSyncStatus &&
+        monero!.hasUnknownKeyImages(wallet);
+  }
+
+  /// Runs key image rounds before any send details are entered, because
+  /// Monero can't build a transaction without them. Repeats since one round
+  /// is capped at MoneroWalletBase.keystoneExportOutputLimit outputs.
+  Future<void> _requireKeystoneKeyImages() async {
+    while (mounted && _needsKeystoneKeyImages) {
+      final proceed = await showPopUp<bool>(
+        context: context,
+        builder: (dialogContext) => AlertWithTwoActions(
+          alertTitle: "Key images needed",
+          alertContent: "Your Keystone must provide key images for your recent outputs before "
+              "you can send. Cake will show a QR code to scan with your Keystone, then you "
+              "scan the QR code it displays.",
+          leftButtonText: S.of(dialogContext).cancel,
+          rightButtonText: S.of(dialogContext).ok,
+          actionLeftButton: () => Navigator.of(dialogContext).pop(false),
+          actionRightButton: () => Navigator.of(dialogContext).pop(true),
+        ),
+      );
+      if (!mounted) return;
+      if (proceed != true) {
+        Navigator.of(context, rootNavigator: true).pop();
+        return;
+      }
+
+      await Navigator.of(context).pushNamed(
+        Routes.syncKeyImagesDevices,
+        arguments: monero!.exportOutputsUR(widget.sendViewModel.wallet),
+      );
+      await Future.delayed(const Duration(seconds: 1)); // wait for monero to refresh the state
+    }
   }
 
   @override
