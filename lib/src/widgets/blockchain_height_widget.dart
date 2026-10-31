@@ -98,6 +98,7 @@ class BlockchainHeightState extends State<BlockchainHeightWidget> {
                     signed: false,
                     decimal: false,
                   ),
+                  floatingLabelBehavior: FloatingLabelBehavior.auto,
                   hintText: widget.isSilentPaymentsScan
                       ? S.of(context).silent_payments_scan_from_height
                       : S.of(context).widgets_restore_from_blockheight,
@@ -127,6 +128,7 @@ class BlockchainHeightState extends State<BlockchainHeightWidget> {
                   child: IgnorePointer(
                     child: BaseTextFormField(
                       controller: dateController,
+                      floatingLabelBehavior: FloatingLabelBehavior.auto,
                       hintText: widget.isSilentPaymentsScan
                           ? S.of(context).silent_payments_scan_from_date
                           : S.of(context).widgets_restore_from_date,
