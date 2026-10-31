@@ -204,7 +204,7 @@ class BalanceCard extends StatelessWidget {
                                           fractionalDigits:
                                               (balanceAmount ?? accountBalance)?.decimals ?? 8,
                                           showSymbol: false,
-                                          smallDigitsAfter: isXmr ? 8 : null,
+                                          smallDigitsAfter: isXmr ? 6 : null,
                                           trimZeros: !isXmr,
                                         )
                                       : Text(fiatFirst ? fiatBalance : balance),
