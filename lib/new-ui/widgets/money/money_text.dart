@@ -29,6 +29,7 @@ class MoneyText extends StatelessWidget {
     this.showSymbol = true,
     this.withSymbolPrefix = false,
     this.trimZeros = true,
+    this.smallDigitsAfter,
   });
 
   /// The [MoneyText.optional] returns a widget displaying [Money] as a
@@ -56,6 +57,7 @@ class MoneyText extends StatelessWidget {
     bool showSymbol = true,
     bool withSymbolPrefix = false,
     bool trimZeros = true,
+    int? smallDigitsAfter,
   }) =>
       amount != null
           ? MoneyText(
@@ -81,6 +83,7 @@ class MoneyText extends StatelessWidget {
               showSymbol: showSymbol,
               withSymbolPrefix: withSymbolPrefix,
               trimZeros: trimZeros,
+              smallDigitsAfter: smallDigitsAfter,
             )
           : const SizedBox.shrink();
 
@@ -216,25 +219,44 @@ class MoneyText extends StatelessWidget {
   /// Trim the zeros at the end of an amount
   final bool trimZeros;
 
+  /// Fractional digits past this count are drawn in smaller text.
+  /// Needs [showSymbol] to be false.
+  final int? smallDigitsAfter;
+
+  TextSpan _textSpan(String text) {
+    final decimalPoint = text.lastIndexOf(RegExp(r"[^0-9]"));
+    final smallFrom = decimalPoint + 1 + (smallDigitsAfter ?? text.length);
+    if (decimalPoint < 0 || smallFrom >= text.length) return TextSpan(text: text);
+
+    return TextSpan(
+      text: text.substring(0, smallFrom),
+      children: [
+        TextSpan(text: text.substring(smallFrom), style: const TextStyle(fontSize: 14)),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) => BlocBuilder<MoneySettingsCubit, MoneySettingsState>(
-        builder: (context, state) => Text(
-          isHiddenAmount ?? state.isHidden
-              ? "●●●●●●"
-              : showSymbol
-                  ? amount.toLocalStringWithSymbol(
-                      fractionalDigits: fractionalDigits,
-                      trimZeros: trimZeros,
-                      useBaseUnit: useBaseUnit ?? state.useBaseUnit(amount.currency),
-                      withSymbolPrefix: withSymbolPrefix,
-                      locale: (locale ?? Localizations.localeOf(context)).toString(),
-                    )
-                  : amount.toLocalStringWithPrecision(
-                      fractionalDigits: fractionalDigits,
-                      trimZeros: trimZeros,
-                      useBaseUnit: useBaseUnit ?? state.useBaseUnit(amount.currency),
-                      locale: (locale ?? Localizations.localeOf(context)).toString(),
-                    ),
+        builder: (context, state) => Text.rich(
+          _textSpan(
+            isHiddenAmount ?? state.isHidden
+                ? "●●●●●●"
+                : showSymbol
+                    ? amount.toLocalStringWithSymbol(
+                        fractionalDigits: fractionalDigits,
+                        trimZeros: trimZeros,
+                        useBaseUnit: useBaseUnit ?? state.useBaseUnit(amount.currency),
+                        withSymbolPrefix: withSymbolPrefix,
+                        locale: (locale ?? Localizations.localeOf(context)).toString(),
+                      )
+                    : amount.toLocalStringWithPrecision(
+                        fractionalDigits: fractionalDigits,
+                        trimZeros: trimZeros,
+                        useBaseUnit: useBaseUnit ?? state.useBaseUnit(amount.currency),
+                        locale: (locale ?? Localizations.localeOf(context)).toString(),
+                      ),
+          ),
           style: style,
           strutStyle: strutStyle,
           textAlign: textAlign,

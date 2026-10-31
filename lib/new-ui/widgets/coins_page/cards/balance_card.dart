@@ -2,6 +2,7 @@ import "package:cake_wallet/generated/i18n.dart";
 import "package:cake_wallet/new-ui/widgets/money/money_text.dart";
 import "package:cake_wallet/src/widgets/cake_image_widget.dart";
 import "package:cw_core/amount/money.dart";
+import "package:cw_core/crypto_currency.dart";
 import "package:cw_core/card_design.dart";
 import "package:flutter/material.dart";
 
@@ -26,6 +27,7 @@ class BalanceCard extends StatelessWidget {
       this.accountName = "",
       this.accountBalance,
       this.balance = "",
+      this.balanceAmount,
       this.fiatBalance = "",
       this.assetName = "",
       this.fiatCurrencyTitle = "",
@@ -42,6 +44,7 @@ class BalanceCard extends StatelessWidget {
   final Money? accountBalance;
   final String accountName;
   final String balance;
+  final Money? balanceAmount;
   final String fiatBalance;
   final String fiatCurrencyTitle;
   final bool fiatFirst;
@@ -60,6 +63,7 @@ class BalanceCard extends StatelessWidget {
     final double iconWidth = width * 0.15;
 
     final name = fiatFirst ? fiatCurrencyTitle : assetName;
+    final isXmr = (balanceAmount ?? accountBalance)?.currency == CryptoCurrency.xmr;
     final resolvedAssetName = capitalizeAssetName ? name.toUpperCase() : name.toLowerCase();
 
     final leadText = fiatFirst ? S.of(context).wallet_balance : accountName;
@@ -194,11 +198,14 @@ class BalanceCard extends StatelessWidget {
                                       fontSize: 28,
                                       fontWeight: FontWeight.w500,
                                       letterSpacing: -0.4),
-                                  child: !fiatFirst && balance.isEmpty
+                                  child: !fiatFirst && (balanceAmount != null || balance.isEmpty)
                                       ? MoneyText.optional(
-                                          accountBalance,
-                                          fractionalDigits: accountBalance?.decimals ?? 8,
+                                          balanceAmount ?? accountBalance,
+                                          fractionalDigits:
+                                              (balanceAmount ?? accountBalance)?.decimals ?? 8,
                                           showSymbol: false,
+                                          smallDigitsAfter: isXmr ? 8 : null,
+                                          trimZeros: !isXmr,
                                         )
                                       : Text(fiatFirst ? fiatBalance : balance),
                                 ),
