@@ -5,6 +5,7 @@ import "package:cake_wallet/core/auth_service.dart";
 import "package:cake_wallet/di.dart";
 import "package:cake_wallet/generated/i18n.dart";
 import "package:cake_wallet/main.dart";
+import "package:cake_wallet/monero/monero.dart";
 import "package:cake_wallet/new-ui/modal_navigator.dart";
 import "package:cake_wallet/new-ui/pages/card_customizer.dart";
 import "package:cake_wallet/new-ui/pages/account_education_page.dart";
@@ -30,6 +31,7 @@ import "package:cake_wallet/utils/payment_request.dart";
 import "package:cake_wallet/view_model/dashboard/dashboard_view_model.dart";
 import "package:cake_wallet/view_model/dashboard/nft_view_model.dart";
 import "package:cw_core/unspent_coin_type.dart";
+import "package:cw_core/wallet_info.dart";
 import "package:cw_core/wallet_type.dart";
 import "package:flutter/cupertino.dart";
 import "package:flutter/material.dart";
@@ -93,7 +95,55 @@ class _NewHomePageState extends State<NewHomePage> with RouteAware {
   }
 
   @override
-  void didPopNext() => widget.dashboardViewModel.loadSeedBackupReminder();
+  void didPopNext() {
+    widget.dashboardViewModel.loadSeedBackupReminder();
+    setState(() {});
+  }
+
+  bool get _needsKeyImages {
+    final viewModel = widget.dashboardViewModel;
+    return viewModel.status is SyncedSyncStatus &&
+        viewModel.wallet.type == WalletType.monero &&
+        viewModel.wallet.hardwareWalletType == HardwareWalletType.keystone &&
+        monero!.hasUnknownKeyImages(viewModel.wallet);
+  }
+
+  Future<void> _syncKeyImages() async {
+    await Navigator.of(context).pushNamed(
+      Routes.syncKeyImagesDevices,
+      arguments: monero!.exportOutputsUR(widget.dashboardViewModel.wallet),
+    );
+    if (mounted) setState(() {});
+  }
+
+  Widget _keyImagesPill(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.87,
+          height: 48,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainer,
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _syncKeyImages,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                child: Row(
+                  spacing: 12,
+                  children: [
+                    Icon(Icons.sync, size: 20, color: Theme.of(context).colorScheme.primary),
+                    const Expanded(child: Text("Key images needed")),
+                    Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) => Container(
@@ -212,6 +262,7 @@ class _NewHomePageState extends State<NewHomePage> with RouteAware {
                                         )),
                                 UnconfirmedBalanceWidget(
                                     dashboardViewModel: widget.dashboardViewModel),
+                                if (_needsKeyImages) _keyImagesPill(context),
                                 SeedBackupReminderCard(
                                   dashboardViewModel: widget.dashboardViewModel,
                                   onTap: openSeedBackupReminder,
