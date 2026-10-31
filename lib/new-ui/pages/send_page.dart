@@ -923,6 +923,21 @@ class _NewSendPageState extends State<NewSendPage> {
         await Future.delayed(const Duration(seconds: 1)); // wait for monero to refresh the state
       }
       if (monero!.needExportOutputs(widget.sendViewModel.wallet, amount)) {
+        if (mounted) {
+          final hasUnknownKeyImages = monero!.hasUnknownKeyImages(widget.sendViewModel.wallet);
+          await showPopUp<void>(
+            context: context,
+            builder: (context) => AlertWithOneAction(
+              alertTitle: S.of(context).error,
+              alertContent: hasUnknownKeyImages
+                  ? "Key images are still missing. Tap Send again to sync them."
+                  : "Not enough spendable balance. Incoming funds can't be spent until they "
+                      "have 10 confirmations and their key images are synced.",
+              buttonText: S.of(context).ok,
+              buttonAction: () => Navigator.of(context).pop(),
+            ),
+          );
+        }
         return;
       }
     }
