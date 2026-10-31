@@ -51,7 +51,9 @@ class TransactionListItem extends ActionListItem with Keyable {
           .withLocalSeperator(_appStore.settingsStore.languageCode);
     }
 
-    return transaction.amount.toStringWithSymbol(fractionalDigits: 8);
+    return transaction.amount.toStringWithSymbol(
+        fractionalDigits:
+            balanceViewModel.wallet.type == WalletType.monero ? transaction.amount.decimals : 8);
   }
 
   String get formattedTitle {
