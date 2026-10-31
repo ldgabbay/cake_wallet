@@ -351,7 +351,10 @@ abstract class MoneroWalletBase
   }
 
   bool importKeyImagesUR(String ur) {
-    final retStatus = currentWallet!.importKeyImagesUR(ur);
+    // Keystone firmware labels every response as starting at offset 0.
+    final retStatus = hardwareWalletType == HardwareWalletType.keystone
+        ? currentWallet!.importKeyImagesURAtOffset(ur, activeExportOffset)
+        : currentWallet!.importKeyImagesUR(ur);
     final status = currentWallet!.status();
     if (status != 0) {
       final err = currentWallet!.errorString();
@@ -360,12 +363,20 @@ abstract class MoneroWalletBase
     return retStatus;
   }
 
+  // Where the export awaiting key images starts in the wallet's outputs.
+  int activeExportOffset = 0;
+
   Map<String, String> exportOutputsUR() {
-    final str = currentWallet!.exportOutputsUR(all: false);
+    final (offset, str) = currentWallet!.exportOutputsURWithOffset(all: false);
     int status = currentWallet!.status();
     if (status != 0) {
       final err = currentWallet!.errorString();
       throw MoneroTransactionCreationException("unable to export outputs: $err");
+    }
+    activeExportOffset = offset;
+    // Keystone keeps no output list, so a partial export always suffices.
+    if (hardwareWalletType == HardwareWalletType.keystone) {
+      return {"Outputs (partial)": str};
     }
     final strAll = currentWallet!.exportOutputsUR(all: true);
     status = currentWallet!.status();
