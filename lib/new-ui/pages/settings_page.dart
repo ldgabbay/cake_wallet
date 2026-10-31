@@ -30,7 +30,8 @@ bool _hasCoinControl(DashboardViewModel vm) => vm.wallet.hasCoinControl;
 
 bool _requiresKeyImageSync(DashboardViewModel vm) =>
     vm.wallet.type == WalletType.monero &&
-    [HardwareWalletType.cupcake, HardwareWalletType.trezor].contains(vm.wallet.hardwareWalletType);
+    [HardwareWalletType.cupcake, HardwareWalletType.trezor, HardwareWalletType.keystone]
+        .contains(vm.wallet.hardwareWalletType);
 
 class SettingsListItem {
   const SettingsListItem(
