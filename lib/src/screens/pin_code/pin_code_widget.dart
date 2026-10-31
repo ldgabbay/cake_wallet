@@ -246,20 +246,36 @@ class PinCodeState<T extends PinCodeWidget> extends State<T> {
 
                                 return Container(
                                   margin: EdgeInsets.only(left: marginLeft, right: marginRight),
-                                  child: TextButton(
-                                    key: ValueKey('pin_code_button_${index}_key'),
-                                    onPressed: () => {_push(index), HapticFeedback.mediumImpact()},
-                                    style: TextButton.styleFrom(
-                                      backgroundColor:
-                                          Theme.of(context).colorScheme.surfaceContainer,
-                                      shape: CircleBorder(),
+                                  // Enters the digit on finger down, not release. Screen readers
+                                  // send no pointer events, so they use the Semantics tap.
+                                  child: Semantics(
+                                    label: '$index',
+                                    button: true,
+                                    excludeSemantics: true,
+                                    onTap: () => _pressDigit(index),
+                                    child: Listener(
+                                      onPointerDown: (_) => _pressDigit(index),
+                                      child: TextButton(
+                                        key: ValueKey('pin_code_button_${index}_key'),
+                                        onPressed: () {},
+                                        style: TextButton.styleFrom(
+                                          backgroundColor:
+                                              Theme.of(context).colorScheme.surfaceContainer,
+                                          shape: CircleBorder(),
+                                        ),
+                                        child: Text('$index',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .headlineMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 30,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurfaceVariant,
+                                                )),
+                                      ),
                                     ),
-                                    child: Text('$index',
-                                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 30,
-                                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                            )),
                                   ),
                                 );
                               }),
@@ -274,6 +290,11 @@ class PinCodeState<T extends PinCodeWidget> extends State<T> {
         ),
       ),
     );
+  }
+
+  void _pressDigit(int num) {
+    _push(num);
+    HapticFeedback.mediumImpact();
   }
 
   void _push(int num) {
