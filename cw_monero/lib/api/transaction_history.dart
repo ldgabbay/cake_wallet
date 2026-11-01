@@ -265,6 +265,7 @@ Future<PendingTransactionDescription> createTransactionMultDest(
       mixinCount: 0,
       pendingTransactionPriority: priorityRaw,
       subaddr_account: accountIndex,
+      preferredInputs: preferredInputs,
     ).address;
   }));
 
