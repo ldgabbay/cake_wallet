@@ -14,6 +14,7 @@ class FiatAmountBar extends StatelessWidget {
     super.key,
     this.onAllButtonPressed,
     this.allAmount,
+    this.exactAllAmount = false,
     this.foregroundElementColor,
     this.textColor,
     this.allAmountColor,
@@ -29,6 +30,9 @@ class FiatAmountBar extends StatelessWidget {
   final String cryptoCurrencySymbol;
   final String fiatCurrencySymbol;
   final String? allAmount;
+
+  /// Shows [allAmount] as given, for amounts a double can't hold exactly.
+  final bool exactAllAmount;
   final Color? foregroundElementColor;
   final Color? textColor;
   final Color? allAmountColor;
@@ -117,6 +121,7 @@ class FiatAmountBar extends StatelessWidget {
   }
 
   String _formatAmount(String amount) {
+    if (exactAllAmount) return amount;
     try {
       return double.parse(amount).toStringAsPrecision(8).replaceFirst(RegExp(r"\.?0+$"), "");
     } catch (e) {

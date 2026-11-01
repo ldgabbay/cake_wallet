@@ -631,6 +631,7 @@ class _NewSendPageState extends State<NewSendPage> {
                                                 _wrapAmount(output.roundedCryptoAmount(6), 20),
                                             allAmount:
                                                 _maxAmount ?? widget.sendViewModel.balance,
+                                            exactAllAmount: _maxAmount != null,
                                             cryptoCurrencySymbol:
                                                 widget.sendViewModel.selectedCryptoCurrencySymbol,
                                             fiatCurrencySymbol:
