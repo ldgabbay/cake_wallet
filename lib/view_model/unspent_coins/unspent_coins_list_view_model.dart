@@ -204,7 +204,7 @@ abstract class UnspentCoinsListViewModelBase with Store {
     for (final item in _getSpecificUnspents(overrideCoinTypeToSpendFrom)) {
       if (seen.contains(item.toString())) continue;
       seen.add(item.toString());
-      if (item.isFrozen || !item.isSending) continue;
+      if (item.isFrozen || !item.isSending || !item.isUnlocked) continue;
       total += item.value;
     }
     return total;

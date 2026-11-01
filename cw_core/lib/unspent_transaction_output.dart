@@ -19,6 +19,8 @@ class Unspent with UnspentComparable {
   int? confirmations;
   String note;
 
+  bool get isUnlocked => true;
+
   bool get isP2wpkh =>
       address.startsWith('bc') || address.startsWith('tb') || address.startsWith('ltc');
 

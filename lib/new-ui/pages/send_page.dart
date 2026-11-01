@@ -224,6 +224,9 @@ class _NewSendPageState extends State<NewSendPage> {
 
   bool _justHandledPasteButton = false;
 
+  /// The spendable total under coin control at full precision. Monero only.
+  String? _maxAmount;
+
   @override
   void initState() {
     super.initState();
@@ -272,7 +275,10 @@ class _NewSendPageState extends State<NewSendPage> {
       });
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => _requireKeystoneKeyImages());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _refreshMaxAmount();
+      await _requireKeystoneKeyImages();
+    });
 
     if (widget.mode == SendPageModes.normal) {
       _deepLinkSubscription = widget.linkViewModel.incomingPaymentLinks.listen((link) async {
@@ -342,6 +348,19 @@ class _NewSendPageState extends State<NewSendPage> {
         arguments: monero!.exportOutputsUR(widget.sendViewModel.wallet),
       );
       await Future.delayed(const Duration(seconds: 1)); // wait for monero to refresh the state
+      await _refreshMaxAmount();
+    }
+  }
+
+  Future<void> _refreshMaxAmount() async {
+    if (widget.sendViewModel.walletType != WalletType.monero) return;
+
+    final maxAmount = await widget.sendViewModel.sendingBalance;
+    if (!mounted) return;
+
+    setState(() => _maxAmount = maxAmount);
+    for (final output in widget.sendViewModel.outputs.where((output) => output.sendAll)) {
+      output.setSendAll(maxAmount);
     }
   }
 
@@ -610,7 +629,8 @@ class _NewSendPageState extends State<NewSendPage> {
                                                 _wrapAmount(output.roundedFiatAmount(6), 20),
                                             cryptoAmount:
                                                 _wrapAmount(output.roundedCryptoAmount(6), 20),
-                                            allAmount: widget.sendViewModel.balance,
+                                            allAmount:
+                                                _maxAmount ?? widget.sendViewModel.balance,
                                             cryptoCurrencySymbol:
                                                 widget.sendViewModel.selectedCryptoCurrencySymbol,
                                             fiatCurrencySymbol:
@@ -671,8 +691,8 @@ class _NewSendPageState extends State<NewSendPage> {
                                                 ListItemRegularRowWidget(
                                                   keyValue: "",
                                                   label: S.of(context).coin_control,
-                                                  onTap: () {
-                                                    showCupertinoModalBottomSheet(
+                                                  onTap: () async {
+                                                    await showCupertinoModalBottomSheet(
                                                       enableDrag: false,
                                                       useRootNavigator: true,
                                                       isDismissible: false,
@@ -684,6 +704,7 @@ class _NewSendPageState extends State<NewSendPage> {
                                                         canEdit: true,
                                                       ),
                                                     );
+                                                    await _refreshMaxAmount();
                                                   },
                                                 ),
                                             ],
