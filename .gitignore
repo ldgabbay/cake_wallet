@@ -229,3 +229,4 @@ scripts/reown_flutter
 android/.kotlin
 scripts/.cache
 pubspec.lock
+!/cw_custom_lints/pubspec.lock
