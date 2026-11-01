@@ -456,6 +456,8 @@ abstract class Monero {
   bool needExportOutputs(Object wallet, Money amount);
   
   bool hasUnknownKeyImages(Object wallet);
+  Future<int> getFeePerByte(Object wallet, TransactionPriority priority);
+  Future<int> estimateFee(Object wallet, int feePerByte, {required bool sendAll, int destinations = 1});
 
   bool importKeyImagesUR(Object wallet, String ur);
 

@@ -9,6 +9,7 @@ import 'package:cake_wallet/entities/calculate_fiat_amount_raw.dart';
 import 'package:cake_wallet/entities/contact_base.dart';
 import 'package:cake_wallet/evm/evm.dart';
 import 'package:cake_wallet/generated/i18n.dart';
+import 'package:cake_wallet/monero/monero.dart';
 import 'package:cake_wallet/reactions/wallet_connect.dart';
 import 'package:cake_wallet/solana/solana.dart';
 import 'package:cake_wallet/store/app_store.dart';
@@ -127,6 +128,10 @@ abstract class OutputBase with Store {
   @observable
   Money estimatedFee;
 
+  /// The rate behind [estimatedFee], when it's known. Set before [estimatedFee], whose change
+  /// rebuilds the page.
+  int? feePerByte;
+
   @action
   Future<void> calculateEstimatedFee() async {
     try {
@@ -141,6 +146,17 @@ abstract class OutputBase with Store {
           _settingsStore.getPriority(_wallet.type, chainId: _wallet.chainId)!,
           cryptoAmountMoney.amount.toInt(),
         );
+      }
+
+      if (_wallet.type == WalletType.monero && priority != null) {
+        try {
+          final rate = await monero!.getFeePerByte(_wallet, priority);
+          fee = await monero!.estimateFee(_wallet, rate, sendAll: sendAll);
+          feePerByte = rate;
+        } catch (e) {
+          feePerByte = null;
+          printV("Keeping the fallback fee: $e");
+        }
       }
 
       switch (_wallet.type) {
@@ -218,6 +234,17 @@ abstract class OutputBase with Store {
       }
     } catch (e) {
       printV(e.toString());
+    }
+  }
+
+  /// [fee] in the fiat currency, at the wallet's own currency's price.
+  String feeFiatAmount(int fee) {
+    try {
+      final cryptoAmount = double.parse(Money.fromInt(fee, _wallet.currency).toString());
+      return calculateFiatAmountRaw(
+          price: _fiatConversationStore.prices[_wallet.currency]!, cryptoAmount: cryptoAmount);
+    } catch (_) {
+      return '0.00';
     }
   }
 

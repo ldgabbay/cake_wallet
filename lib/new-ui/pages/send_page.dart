@@ -362,6 +362,8 @@ class _NewSendPageState extends State<NewSendPage> {
     for (final output in widget.sendViewModel.outputs.where((output) => output.sendAll)) {
       output.setSendAll(maxAmount);
     }
+    await Future.wait(
+        widget.sendViewModel.outputs.map((output) => output.calculateEstimatedFee()));
   }
 
   @override
@@ -675,8 +677,13 @@ class _NewSendPageState extends State<NewSendPage> {
                                                 ListItemRegularRowWidget(
                                                   keyValue: "",
                                                   label: S.of(context).fees,
-                                                  subtitle:
-                                                      "~${output.estimatedFee} ${widget.sendViewModel.currencySymbol} (${output.estimatedFeeFiatAmount} ${widget.sendViewModel.fiatCurrency})",
+                                                  subtitle: output.feePerByte != null
+                                                      ? _moneroFeeLabel(
+                                                          output,
+                                                          output.feePerByte!,
+                                                          output.estimatedFee.amount.toInt(),
+                                                        )
+                                                      : "~${output.estimatedFee} ${widget.sendViewModel.currencySymbol} (${output.estimatedFeeFiatAmount} ${widget.sendViewModel.fiatCurrency})",
                                                   // Without fee priorities the row does nothing,
                                                   // so it must not be announced as interactive or
                                                   // show a tappable arrow.
@@ -1354,7 +1361,9 @@ class _NewSendPageState extends State<NewSendPage> {
   }
 
   Future<void> pickTransactionPriority(BuildContext pageContext, Output output) async {
+    final isMonero = widget.sendViewModel.walletType == WalletType.monero;
     final items = priorityForWalletType(widget.sendViewModel.walletType);
+    final moneroFees = isMonero ? _moneroFees(output) : null;
     final selectedItem = items.indexOf(widget.sendViewModel.feesViewModel.transactionPriority);
     final customItemIndex = widget.sendViewModel.feesViewModel.getCustomPriorityIndex(items);
     final isBitcoinWallet = widget.sendViewModel.walletType == WalletType.bitcoin;
@@ -1379,33 +1388,41 @@ class _NewSendPageState extends State<NewSendPage> {
                   parentContext: modalContext,
                   heightMode: ModalHeightModes.natural,
                   rootPage: Material(
-                    child: NewPicker(
-                      title: S.of(context).set_fees,
-                      description: S.of(context).set_fees_desc,
-                      sliderPageTitle: S.of(context).custom_fee,
-                      sliderInitialValue: customFeeRate,
-                      sliderMaxValue: maxCustomFeeRate,
-                      sliderValueDescription: "sat/byte",
-                      items: items
-                          .map(
-                            (item) => PickerItem<TransactionPriority>(
-                              title: item.title,
-                              subtitle: item.description,
-                              hint: item.hint,
-                              value: item,
-                              isSliderItem: items.indexOf(item) == customItemIndex,
-                            ),
-                          )
-                          .toList(),
-                      onItemSelected: (priority) async {
-                        widget.sendViewModel.feesViewModel.setTransactionPriority(priority);
-                        setState(() => selectedIdx = items.indexOf(priority));
-                        await output.calculateEstimatedFee();
+                    // Lives inside the page: the modal navigator doesn't rebuild its root page.
+                    child: FutureBuilder<_MoneroFees>(
+                      future: moneroFees,
+                      builder: (context, snapshot) {
+                        final fees = snapshot.data;
+                        return NewPicker(
+                          title: S.of(context).set_fees,
+                          description: S.of(context).set_fees_desc,
+                          sliderPageTitle: S.of(context).custom_fee,
+                          sliderInitialValue: customFeeRate,
+                          sliderMaxValue: maxCustomFeeRate,
+                          sliderValueDescription: "sat/byte",
+                          items: items
+                              .map(
+                                (item) => PickerItem<TransactionPriority>(
+                                  title: item.title,
+                                  subtitle: fees?.totalLabel(item) ?? item.description,
+                                  hint: item.hint,
+                                  value: item,
+                                  isSliderItem: items.indexOf(item) == customItemIndex,
+                                ),
+                              )
+                              .toList(),
+                          onItemSelected: (priority) async {
+                            widget.sendViewModel.feesViewModel.setTransactionPriority(priority);
+                            setState(() => selectedIdx = items.indexOf(priority));
+                            await output.calculateEstimatedFee();
+                          },
+                          onSliderChanged: (value) {
+                            widget.sendViewModel.feesViewModel.customBitcoinFeeRate =
+                                value.round();
+                          },
+                          selectedIndex: selectedIdx,
+                        );
                       },
-                      onSliderChanged: (value) {
-                        widget.sendViewModel.feesViewModel.customBitcoinFeeRate = value.round();
-                      },
-                      selectedIndex: selectedIdx,
                     ),
                   ),
                 ),
@@ -1414,6 +1431,36 @@ class _NewSendPageState extends State<NewSendPage> {
           },
         );
       },
+    );
+  }
+
+  /// Like 20000 pXMR/B (~0.000044 XMR, ~0.30 USD).
+  String _moneroFeeLabel(Output output, int feePerByte, int total) {
+    final viewModel = widget.sendViewModel;
+    final crypto = "~${viewModel.wallet.currency.formatAmount(BigInt.from(total))} "
+        "${viewModel.wallet.currency.title}";
+    final fiat = viewModel.isFiatDisabled
+        ? ""
+        : ", ~${output.feeFiatAmount(total)} ${viewModel.fiatCurrency.title}";
+    return "$feePerByte pXMR/B ($crypto$fiat)";
+  }
+
+  Future<_MoneroFees> _moneroFees(Output output) async {
+    final viewModel = widget.sendViewModel;
+    final sendAll = viewModel.outputs.any((output) => output.sendAll);
+    final rates = <TransactionPriority, int>{};
+    final totals = <TransactionPriority, int>{};
+
+    for (final priority in priorityForWalletType(WalletType.monero)) {
+      rates[priority] = await monero!.getFeePerByte(viewModel.wallet, priority);
+      totals[priority] = await monero!.estimateFee(viewModel.wallet, rates[priority]!,
+          sendAll: sendAll, destinations: viewModel.outputs.length);
+    }
+
+    return _MoneroFees(
+      rates,
+      totals,
+      (feePerByte, total) => _moneroFeeLabel(output, feePerByte, total),
     );
   }
 
@@ -1427,6 +1474,19 @@ class _NewSendPageState extends State<NewSendPage> {
     } else {
       widget.sendViewModel.outputs[selectedOutput].note = note;
     }
+  }
+}
+
+class _MoneroFees {
+  _MoneroFees(this.rates, this.totals, this.format);
+
+  final Map<TransactionPriority, int> rates;
+  final Map<TransactionPriority, int> totals;
+  final String Function(int feePerByte, int total) format;
+
+  String? totalLabel(TransactionPriority priority) {
+    final total = totals[priority];
+    return total == null ? null : format(rates[priority]!, total);
   }
 }
 

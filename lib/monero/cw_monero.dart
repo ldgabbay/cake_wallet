@@ -448,6 +448,16 @@ class CWMonero extends Monero {
   }
 
   @override
+  Future<int> getFeePerByte(Object wallet, TransactionPriority priority) =>
+      (wallet as MoneroWallet).getFeePerByte(priority as MoneroTransactionPriority);
+
+  @override
+  Future<int> estimateFee(Object wallet, int feePerByte,
+          {required bool sendAll, int destinations = 1}) =>
+      (wallet as MoneroWallet)
+          .estimateFee(feePerByte, sendAll: sendAll, destinations: destinations);
+
+  @override
   void monerocCheck() => checkIfMoneroCIsFine();
 
   @override

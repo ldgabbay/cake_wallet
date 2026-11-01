@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:isolate';
+import 'dart:math';
 
 import 'package:cw_core/amount/money.dart';
 import 'package:cw_core/pathForWallet.dart';
@@ -545,6 +546,27 @@ abstract class MoneroWalletBase
     }
 
     return PendingMoneroTransaction(pendingTransactionDescription, this);
+  }
+
+  /// The rate [priority] would pay now, in atomic units per byte.
+  Future<int> getFeePerByte(MoneroTransactionPriority priority) async {
+    final rate = await transaction_history.feePerByte(priority.serialize());
+    if (rate == 0) throw MoneroTransactionCreationException('Failed to get the fee rate.');
+    return rate;
+  }
+
+  /// wallet2 only picks the inputs when it builds the transaction, so this assumes its usual
+  /// two where they're available, or for [sendAll] every allowed output, which it sweeps.
+  Future<int> estimateFee(int feePerByte, {required bool sendAll, int destinations = 1}) async {
+    final allowed =
+        unspentCoins.where((coin) => coin.isSending && !coin.isFrozen && coin.isUnlocked).length;
+    final fee = await transaction_history.estimateFee(
+      inputs: max(1, sendAll ? allowed : min(allowed, 2)),
+      outputs: destinations + 1,
+      feePerByte: feePerByte,
+    );
+    if (fee == 0) throw MoneroTransactionCreationException('Failed to estimate the fee.');
+    return fee;
   }
 
   @override

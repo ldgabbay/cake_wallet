@@ -143,6 +143,22 @@ Future<Transaction> getTransaction(String txId) async {
   }
 }
 
+/// The rate a transaction at this priority would pay now, in atomic units per byte.
+Future<int> feePerByte(int priorityRaw) {
+  final waddr = currentWallet!.ffiAddress();
+  return Isolate.run(() {
+    return monero.Wallet_feePerByte(Pointer.fromAddress(waddr), priority: priorityRaw);
+  });
+}
+
+Future<int> estimateFee({required int inputs, required int outputs, required int feePerByte}) {
+  final waddr = currentWallet!.ffiAddress();
+  return Isolate.run(() {
+    return monero.Wallet_estimateFee(Pointer.fromAddress(waddr),
+        inputs: inputs, outputs: outputs, feePerByte: feePerByte);
+  });
+}
+
 Future<PendingTransactionDescription> createTransactionSync(
     {required String address,
     required String paymentId,
