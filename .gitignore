@@ -186,8 +186,6 @@ macos/AppIcon.icon/*
 
 integration_test/playground.dart
 
-# Monero.dart (Monero_C)
-scripts/monero_c
 # iOS generated framework bin
 ios/MoneroWallet.framework/MoneroWallet
 ios/WowneroWallet.framework/WowneroWallet

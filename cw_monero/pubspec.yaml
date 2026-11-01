@@ -24,10 +24,7 @@ dependencies:
   cw_core:
     path: ../cw_core
   monero:
-    git:
-      url: https://github.com/mrcyjanek/monero_c.git
-      ref: 33671871de3d51696b66ffb3bd94f744e26974f6
-      path: impls/monero.dart
+    path: ../scripts/monero_c/impls/monero.dart
   mutex: ^3.1.0
   ledger_flutter_plus: ^1.4.1
   trezor_flutter:

@@ -25,10 +25,7 @@ dependencies:
   json_bigint: ^3.0.0
   fluttertoast: ^8.2.12
   monero:
-    git:
-      url: https://github.com/mrcyjanek/monero_c.git
-      ref: 33671871de3d51696b66ffb3bd94f744e26974f6
-      path: impls/monero.dart
+    path: ../scripts/monero_c/impls/monero.dart
 dev_dependencies:
   flutter_test:
     sdk: flutter

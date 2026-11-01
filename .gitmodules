@@ -1,0 +1,3 @@
+[submodule "scripts/monero_c"]
+	path = scripts/monero_c
+	url = https://github.com/ldgabbay/monero_c
