@@ -226,6 +226,9 @@ class _NewSendPageState extends State<NewSendPage> {
   /// The spendable total under coin control at full precision. Monero only.
   String? _maxAmount;
 
+  /// Like "3/5 outputs, 0.004/0.184858 XMR". Monero only.
+  String? _coinControlSummary;
+
   @override
   void initState() {
     super.initState();
@@ -357,7 +360,15 @@ class _NewSendPageState extends State<NewSendPage> {
     final maxAmount = await widget.sendViewModel.sendingBalance;
     if (!mounted) return;
 
-    setState(() => _maxAmount = maxAmount);
+    final summary = widget.sendViewModel.unspentCoinsListViewModel
+        .spendSummary(widget.sendViewModel.coinTypeToSpendFrom);
+    final currency = widget.sendViewModel.wallet.currency;
+    setState(() {
+      _maxAmount = maxAmount;
+      _coinControlSummary = "${summary.enabled}/${summary.total} outputs, "
+          "${currency.formatAmount(BigInt.from(summary.enabledValue))}/"
+          "${currency.formatAmount(BigInt.from(summary.totalValue))} ${currency.title}";
+    });
     for (final output in widget.sendViewModel.outputs.where((output) => output.sendAll)) {
       output.setSendAll(maxAmount);
     }
@@ -700,6 +711,7 @@ class _NewSendPageState extends State<NewSendPage> {
                                                   ListItemRegularRowWidget(
                                                     keyValue: "",
                                                     label: S.of(context).coin_control,
+                                                    subtitle: _coinControlSummary,
                                                     onTap: () async {
                                                       await showCupertinoModalBottomSheet(
                                                         enableDrag: false,
