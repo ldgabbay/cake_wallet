@@ -1,6 +1,9 @@
 ARG BASE_IMAGE
 FROM --platform=linux/amd64 ${BASE_IMAGE} AS build
 
+ARG SUBMODULE_URL
+ARG SUBMODULE_REF
+COPY scripts/fetch_submodule.sh /w/scripts/fetch_submodule.sh
 COPY scripts/functions.sh /w/scripts/functions.sh
 COPY scripts/prepare_moneroc.sh /w/scripts/prepare_moneroc.sh
 COPY scripts/android/build_monero_all.sh /w/scripts/android/build_monero_all.sh

@@ -60,6 +60,13 @@ MONERO_TARGETS=(
   x86_64-linux-android
 )
 
+# Build args for a stage that clones a submodule at the commit the parent pins.
+submodule_args() {
+  local path="$1"
+  echo --build-arg "SUBMODULE_URL=$(git -C "$REPO_ROOT" config -f .gitmodules "submodule.$path.url")"
+  echo --build-arg "SUBMODULE_REF=$(git -C "$REPO_ROOT" rev-parse "HEAD:$path")"
+}
+
 image_exists() {
   docker image inspect "$1" &>/dev/null
 }
@@ -234,10 +241,10 @@ merge_slices() {
 }
 
 base_ver="latest"
-torch_ver="$(tinysha $SCRIPT_DIR/Dockerfile.torch $REPO_ROOT/scripts/prepare_torch.sh $REPO_ROOT/scripts/android/build_torch.sh)"
-reown_ver=$(tinysha $SCRIPT_DIR/Dockerfile.reown $REPO_ROOT/scripts/prepare_reown.sh $REPO_ROOT/scripts/android/build_reown_deps.sh)
-bitbox_ver=$(tinysha $SCRIPT_DIR/Dockerfile.bitbox $REPO_ROOT/scripts/build_bitbox_flutter.sh)
-monero_ver=$(tinysha $SCRIPT_DIR/Dockerfile.monero $REPO_ROOT/scripts/prepare_moneroc.sh $REPO_ROOT/scripts/android/build_monero_all.sh)
+torch_ver="$(tinysha $SCRIPT_DIR/Dockerfile.torch $REPO_ROOT/scripts/fetch_submodule.sh $REPO_ROOT/scripts/prepare_torch.sh $REPO_ROOT/scripts/android/build_torch.sh <(submodule_args scripts/torch_dart))"
+reown_ver=$(tinysha $SCRIPT_DIR/Dockerfile.reown $REPO_ROOT/scripts/fetch_submodule.sh $REPO_ROOT/scripts/prepare_reown.sh $REPO_ROOT/scripts/android/build_reown_deps.sh <(submodule_args scripts/reown_flutter))
+bitbox_ver=$(tinysha $SCRIPT_DIR/Dockerfile.bitbox $REPO_ROOT/scripts/fetch_submodule.sh $REPO_ROOT/scripts/build_bitbox_flutter.sh <(submodule_args scripts/bitbox_flutter))
+monero_ver=$(tinysha $SCRIPT_DIR/Dockerfile.monero $REPO_ROOT/scripts/fetch_submodule.sh $REPO_ROOT/scripts/prepare_moneroc.sh $REPO_ROOT/scripts/android/build_monero_all.sh <(submodule_args scripts/monero_c))
 mwebd_ver=$(tinysha $SCRIPT_DIR/Dockerfile.mwebd $REPO_ROOT/pubspec_overrides.yaml $(find $REPO_ROOT/cw_mweb/go -type f | sort))
 zcash_ver=$(tinysha $SCRIPT_DIR/Dockerfile.zcash $REPO_ROOT/scripts/prepare_zcash.sh $REPO_ROOT/scripts/android/build_zcash.sh)
 torch_assembled_extra > /tmp/cw_torch_assembled_extra
@@ -256,7 +263,8 @@ extract_final() {
   if docker create --name temp_extract "$tag"; then
     cd "$REPO_ROOT"
     docker cp temp_extract:/w.top w.top
-    rsync -av w.top/ .
+    # Clones in the stages carry .git; the repo keeps its own submodule links.
+    rsync -av --exclude=.git w.top/ .
     rm -rf w.top
     docker rm temp_extract
     echo "cache ok"
@@ -277,7 +285,8 @@ build_base() {
 }
 
 build_bitbox() {
-  build bitbox "$bitbox_ver" --build-arg BASE_IMAGE="$(img base "$base_ver")"
+  build bitbox "$bitbox_ver" --build-arg BASE_IMAGE="$(img base "$base_ver")" \
+    $(submodule_args scripts/bitbox_flutter)
 }
 
 build_mwebd() {
@@ -285,7 +294,8 @@ build_mwebd() {
 }
 
 build_reown() {
-  build reown "$reown_ver" --build-arg BASE_IMAGE="$(img base "$base_ver")"
+  build reown "$reown_ver" --build-arg BASE_IMAGE="$(img base "$base_ver")" \
+    $(submodule_args scripts/reown_flutter)
 }
 
 build_zcash() {
@@ -304,7 +314,8 @@ build_torch() {
   fi
   build torch "$torch_ver" \
     --build-arg BASE_IMAGE="$(img base "$base_ver")" \
-    --build-arg TARGET="${TARGET}"
+    --build-arg TARGET="${TARGET}" \
+    $(submodule_args scripts/torch_dart)
 }
 
 build_monero() {
@@ -322,7 +333,8 @@ build_monero() {
   build monero "$monero_ver" \
     --build-arg BASE_IMAGE="$(img base "$base_ver")" \
     --build-arg COIN="${COIN}" \
-    --build-arg TARGET="${TARGET}"
+    --build-arg TARGET="${TARGET}" \
+    $(submodule_args scripts/monero_c)
 }
 
 build_decred() {

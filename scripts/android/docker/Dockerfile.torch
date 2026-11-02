@@ -2,6 +2,9 @@ ARG BASE_IMAGE
 
 FROM --platform=linux/amd64 ${BASE_IMAGE} AS build
 
+ARG SUBMODULE_URL
+ARG SUBMODULE_REF
+COPY scripts/fetch_submodule.sh /w/scripts/fetch_submodule.sh
 COPY scripts/prepare_torch.sh /w/scripts/prepare_torch.sh
 COPY scripts/android/build_torch.sh /w/scripts/android/build_torch.sh
 ARG UID=10001

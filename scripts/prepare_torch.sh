@@ -4,4 +4,4 @@ cd "$(dirname "$0")/.."
 
 # torch_dart is the submodule scripts/torch_dart, pinned to the v1.0.17 tag
 # that upstream's CI tarball (torch_dart-v1.0.17.tar.gz) was built from.
-git submodule update --init scripts/torch_dart
+./scripts/fetch_submodule.sh scripts/torch_dart
