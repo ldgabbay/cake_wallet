@@ -26,6 +26,9 @@ class WalletInfoBar extends StatelessWidget {
               transitionBuilder: (child, animation) => SizeTransition(
                 axis: Axis.horizontal,
                 sizeFactor: animation,
+                // Without this the transition fills the bar's height and
+                // pins the icon to its top.
+                fixedCrossAxisSizeFactor: 1.0,
                 child: FadeTransition(opacity: animation, child: child),
               ),
               child: hardwareWalletIcon == null
