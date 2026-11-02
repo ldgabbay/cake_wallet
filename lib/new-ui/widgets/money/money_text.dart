@@ -1,3 +1,5 @@
+import "dart:math";
+
 import "package:cake_wallet/generated/i18n.dart";
 import "package:cake_wallet/new-ui/widgets/money/money_settings_cubit.dart";
 import "package:cw_core/amount/money.dart";
@@ -219,19 +221,27 @@ class MoneyText extends StatelessWidget {
   /// Trim the zeros at the end of an amount
   final bool trimZeros;
 
-  /// Fractional digits past this count are drawn in smaller text.
-  /// Needs [showSymbol] to be false.
+  /// Fractional digits past this count shrink in groups of three, each group a
+  /// step smaller than the last, down to 14 for the final group. For XMR the
+  /// groups are the metric denominations. Needs [showSymbol] to be false.
   final int? smallDigitsAfter;
 
-  TextSpan _textSpan(String text) {
+  TextSpan _textSpan(String text, double baseSize) {
     final decimalPoint = text.lastIndexOf(RegExp(r"[^0-9]"));
-    final smallFrom = decimalPoint + 1 + (smallDigitsAfter ?? text.length);
-    if (decimalPoint < 0 || smallFrom >= text.length) return TextSpan(text: text);
+    final start = decimalPoint + 1 + (smallDigitsAfter ?? text.length);
+    if (decimalPoint < 0 || start >= text.length) return TextSpan(text: text);
 
+    final groups = ((text.length - start) / 3).ceil();
     return TextSpan(
-      text: text.substring(0, smallFrom),
+      text: text.substring(0, start),
       children: [
-        TextSpan(text: text.substring(smallFrom), style: const TextStyle(fontSize: 14)),
+        for (var i = 0; i < groups; i++)
+          TextSpan(
+            text: text.substring(start + i * 3, min(start + (i + 1) * 3, text.length)),
+            style: TextStyle(
+              fontSize: (baseSize - (baseSize - 14) * (i + 1) / groups).roundToDouble(),
+            ),
+          ),
       ],
     );
   }
@@ -256,6 +266,7 @@ class MoneyText extends StatelessWidget {
                         useBaseUnit: useBaseUnit ?? state.useBaseUnit(amount.currency),
                         locale: (locale ?? Localizations.localeOf(context)).toString(),
                       ),
+            style?.fontSize ?? DefaultTextStyle.of(context).style.fontSize ?? 14,
           ),
           style: style,
           strutStyle: strutStyle,
