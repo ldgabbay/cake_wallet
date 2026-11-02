@@ -682,11 +682,8 @@ class _NewSendPageState extends State<NewSendPage> {
                                                     keyValue: "",
                                                     label: S.of(context).fees,
                                                     subtitle: output.feePerByte != null
-                                                        ? _moneroFeeLabel(
-                                                            output,
-                                                            output.feePerByte!,
-                                                            output.estimatedFee.amount.toInt(),
-                                                          )
+                                                        ? "${widget.sendViewModel.feesViewModel.transactionPriority.title} "
+                                                            "(${_moneroFeeLabel(output, output.estimatedFee.amount.toInt())})"
                                                         : "~${output.estimatedFee} ${widget.sendViewModel.currencySymbol} (${output.estimatedFeeFiatAmount} ${widget.sendViewModel.fiatCurrency})",
                                                     // Without fee priorities the row does nothing,
                                                     // so it must not be announced as interactive or
@@ -1439,15 +1436,15 @@ class _NewSendPageState extends State<NewSendPage> {
     );
   }
 
-  /// Like 20000 pXMR/B (~0.000044 XMR, ~0.30 USD).
-  String _moneroFeeLabel(Output output, int feePerByte, int total) {
+  /// Like ~0.000044 XMR, ~0.30 USD.
+  String _moneroFeeLabel(Output output, int total) {
     final viewModel = widget.sendViewModel;
     final crypto = "~${viewModel.wallet.currency.formatAmount(BigInt.from(total))} "
         "${viewModel.wallet.currency.title}";
     final fiat = viewModel.isFiatDisabled
         ? ""
         : ", ~${output.feeFiatAmount(total)} ${viewModel.fiatCurrency.title}";
-    return "$feePerByte pXMR/B ($crypto$fiat)";
+    return "$crypto$fiat";
   }
 
   Future<_MoneroFees> _moneroFees(Output output) async {
@@ -1462,11 +1459,7 @@ class _NewSendPageState extends State<NewSendPage> {
           sendAll: sendAll, destinations: viewModel.outputs.length);
     }
 
-    return _MoneroFees(
-      rates,
-      totals,
-      (feePerByte, total) => _moneroFeeLabel(output, feePerByte, total),
-    );
+    return _MoneroFees(rates, totals, (total) => _moneroFeeLabel(output, total));
   }
 
   String _wrapAmount(String amount, int maxChars) =>
@@ -1487,11 +1480,12 @@ class _MoneroFees {
 
   final Map<TransactionPriority, int> rates;
   final Map<TransactionPriority, int> totals;
-  final String Function(int feePerByte, int total) format;
+  final String Function(int total) format;
 
+  /// Like 20000 pXMR/B (~0.000044 XMR, ~0.30 USD).
   String? totalLabel(TransactionPriority priority) {
     final total = totals[priority];
-    return total == null ? null : format(rates[priority]!, total);
+    return total == null ? null : "${rates[priority]} pXMR/B (${format(total)})";
   }
 }
 
