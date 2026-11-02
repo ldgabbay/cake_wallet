@@ -237,31 +237,34 @@ class CoinControlListSection extends StatelessWidget {
         return Observer(builder: (_) {
           final item = items[index];
           final fiatAmount = unspentCoinsListViewModel.fiatAmounts[item.amount] ?? '';
-          return GestureDetector(
-            onTap: () => Navigator.of(context).pushNamed(
-              Routes.unspentCoinsDetails,
-              arguments: [item, unspentCoinsListViewModel],
-            ),
-            child: CoinControlListItem(
-              note: item.note,
-              amount: item.amount,
-              fiatAmount: fiatAmount,
-              address: item.address,
-              isSending: item.isSending,
-              isFrozen: item.isFrozen,
-              isChange: item.isChange,
-              isSilentPayment: item.isSilentPayment,
-              isLoading: item.isBeingSaved,
-              isFirst: index == 0,
-              isLast: index == items.length - 1,
-              hasCheckbox: canEdit,
-              onCheckBoxTap: item.isFrozen
-                  ? null
-                  : () async {
-                      item.isSending = !item.isSending;
-                      await unspentCoinsListViewModel.saveUnspentCoinInfo(item);
-                    },
-            ),
+          void openDetails() => Navigator.of(context).pushNamed(
+                Routes.unspentCoinsDetails,
+                arguments: [item, unspentCoinsListViewModel],
+              );
+          final toggle = item.isFrozen
+              ? null
+              : () async {
+                  item.isSending = !item.isSending;
+                  await unspentCoinsListViewModel.saveUnspentCoinInfo(item);
+                };
+          return CoinControlListItem(
+            note: item.note,
+            amount: item.amount,
+            fiatAmount: fiatAmount,
+            address: item.address,
+            isSending: item.isSending,
+            isFrozen: item.isFrozen,
+            isChange: item.isChange,
+            isSilentPayment: item.isSilentPayment,
+            isLoading: item.isBeingSaved,
+            isFirst: index == 0,
+            isLast: index == items.length - 1,
+            hasCheckbox: canEdit,
+            onCheckBoxTap: toggle,
+            // Tapping the row selects the output where that's possible; the
+            // trailing amount and chevron open the details page.
+            onTap: canEdit && toggle != null ? toggle : openDetails,
+            onDetailsTap: openDetails,
           );
         });
       },

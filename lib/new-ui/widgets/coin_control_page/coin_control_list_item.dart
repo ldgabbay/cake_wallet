@@ -18,6 +18,8 @@ class CoinControlListItem extends StatelessWidget {
     required this.isLast,
     required this.isLoading,
     this.onCheckBoxTap,
+    this.onTap,
+    this.onDetailsTap,
     required this.hasCheckbox,
   });
 
@@ -34,10 +36,14 @@ class CoinControlListItem extends StatelessWidget {
   final bool isLoading;
   final bool hasCheckbox;
   final Function()? onCheckBoxTap;
+  final Function()? onTap;
+  final Function()? onDetailsTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
         height: 70,
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainer,
@@ -102,26 +108,37 @@ class CoinControlListItem extends StatelessWidget {
                   )
                 ],
               ),
-              Row(
-                spacing: 8,
-                children: [
-                  Text(
-                    fiatAmount,
-                    style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant),
+              // Full row height and padded on the left, so the chevron is an easy target.
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onDetailsTap,
+                child: Container(
+                  height: double.infinity,
+                  padding: const EdgeInsets.only(left: 16),
+                  child: Row(
+                    spacing: 8,
+                    children: [
+                      Text(
+                        fiatAmount,
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      ),
+                      CakeImageWidget(
+                        imageUrl: "assets/new-ui/arrow_right.svg",
+                        colorFilter: ColorFilter.mode(
+                            Theme.of(context).colorScheme.onSurfaceVariant, BlendMode.srcIn),
+                      ),
+                    ],
                   ),
-                  CakeImageWidget(
-                    imageUrl: "assets/new-ui/arrow_right.svg",
-                    colorFilter: ColorFilter.mode(
-                        Theme.of(context).colorScheme.onSurfaceVariant, BlendMode.srcIn),
-                  ),
-                ],
+                ),
               )
             ],
           ),
-        ));
+        ),
+      ),
+    );
   }
 
   Widget _getLeading(BuildContext context) {
