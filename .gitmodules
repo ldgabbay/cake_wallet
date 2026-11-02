@@ -1,3 +1,12 @@
 [submodule "scripts/monero_c"]
 	path = scripts/monero_c
 	url = https://github.com/ldgabbay/monero_c
+[submodule "scripts/torch_dart"]
+	path = scripts/torch_dart
+	url = https://github.com/mrcyjanek/torch_dart
+[submodule "scripts/reown_flutter"]
+	path = scripts/reown_flutter
+	url = https://github.com/cake-tech/reown_flutter
+[submodule "scripts/bitbox_flutter"]
+	path = scripts/bitbox_flutter
+	url = https://github.com/konstantinullrich/bitbox_flutter
