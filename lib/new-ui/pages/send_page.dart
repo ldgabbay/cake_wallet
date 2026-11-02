@@ -16,7 +16,6 @@ import "package:cake_wallet/main.dart";
 import "package:cake_wallet/monero/monero.dart";
 import "package:cake_wallet/new-ui/modal_navigator.dart";
 import "package:cake_wallet/new-ui/pages/coin_control_page.dart";
-import "package:cake_wallet/new-ui/widgets/animated_dropdown.dart";
 import "package:cake_wallet/new-ui/widgets/anypay/anypay_flow.dart";
 import "package:cake_wallet/new-ui/widgets/anypay/recipient_network_row.dart";
 import "package:cake_wallet/new-ui/widgets/anypay/select_recipient_network_sheet.dart";
@@ -671,54 +670,58 @@ class _NewSendPageState extends State<NewSendPage> {
                                         ),
                                       if (widget.sendViewModel.hasCoinControl ||
                                           widget.sendViewModel.hasFees)
-                                        AnimatedDropdown(
-                                          dropdownText: S.of(context).advanced_settings,
-                                          content: Column(
-                                            children: [
-                                              if (widget.sendViewModel.hasFees)
-                                                ListItemRegularRowWidget(
-                                                  keyValue: "",
-                                                  label: S.of(context).fees,
-                                                  subtitle: output.feePerByte != null
-                                                      ? _moneroFeeLabel(
-                                                          output,
-                                                          output.feePerByte!,
-                                                          output.estimatedFee.amount.toInt(),
-                                                        )
-                                                      : "~${output.estimatedFee} ${widget.sendViewModel.currencySymbol} (${output.estimatedFeeFiatAmount} ${widget.sendViewModel.fiatCurrency})",
-                                                  // Without fee priorities the row does nothing,
-                                                  // so it must not be announced as interactive or
-                                                  // show a tappable arrow.
-                                                  showArrow: widget
-                                                      .sendViewModel.feesViewModel.hasFeesPriority,
-                                                  onTap: widget.sendViewModel.feesViewModel
-                                                          .hasFeesPriority
-                                                      ? () =>
-                                                          pickTransactionPriority(context, output)
-                                                      : null,
-                                                ),
-                                              if (widget.sendViewModel.hasCoinControl)
-                                                ListItemRegularRowWidget(
-                                                  keyValue: "",
-                                                  label: S.of(context).coin_control,
-                                                  onTap: () async {
-                                                    await showCupertinoModalBottomSheet(
-                                                      enableDrag: false,
-                                                      useRootNavigator: true,
-                                                      isDismissible: false,
-                                                      context: context,
-                                                      builder: (context) => NewCoinControlPage(
-                                                        unspentCoinsListViewModel: widget
-                                                            .sendViewModel
-                                                            .unspentCoinsListViewModel,
-                                                        canEdit: true,
-                                                      ),
-                                                    );
-                                                    await _refreshMaxAmount();
-                                                  },
-                                                ),
-                                            ],
-                                          ),
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          spacing: 12,
+                                          children: [
+                                            Text(S.of(context).advanced_settings_label),
+                                            Column(
+                                              children: [
+                                                if (widget.sendViewModel.hasFees)
+                                                  ListItemRegularRowWidget(
+                                                    keyValue: "",
+                                                    label: S.of(context).fees,
+                                                    subtitle: output.feePerByte != null
+                                                        ? _moneroFeeLabel(
+                                                            output,
+                                                            output.feePerByte!,
+                                                            output.estimatedFee.amount.toInt(),
+                                                          )
+                                                        : "~${output.estimatedFee} ${widget.sendViewModel.currencySymbol} (${output.estimatedFeeFiatAmount} ${widget.sendViewModel.fiatCurrency})",
+                                                    // Without fee priorities the row does nothing,
+                                                    // so it must not be announced as interactive or
+                                                    // show a tappable arrow.
+                                                    showArrow: widget.sendViewModel.feesViewModel
+                                                        .hasFeesPriority,
+                                                    onTap: widget.sendViewModel.feesViewModel
+                                                            .hasFeesPriority
+                                                        ? () =>
+                                                            pickTransactionPriority(context, output)
+                                                        : null,
+                                                  ),
+                                                if (widget.sendViewModel.hasCoinControl)
+                                                  ListItemRegularRowWidget(
+                                                    keyValue: "",
+                                                    label: S.of(context).coin_control,
+                                                    onTap: () async {
+                                                      await showCupertinoModalBottomSheet(
+                                                        enableDrag: false,
+                                                        useRootNavigator: true,
+                                                        isDismissible: false,
+                                                        context: context,
+                                                        builder: (context) => NewCoinControlPage(
+                                                          unspentCoinsListViewModel: widget
+                                                              .sendViewModel
+                                                              .unspentCoinsListViewModel,
+                                                          canEdit: true,
+                                                        ),
+                                                      );
+                                                      await _refreshMaxAmount();
+                                                    },
+                                                  ),
+                                              ],
+                                            ),
+                                          ],
                                         ),
                                     ],
                                   ),
