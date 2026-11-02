@@ -246,23 +246,18 @@ class PinCodeState<T extends PinCodeWidget> extends State<T> {
 
                                 return Container(
                                   margin: EdgeInsets.only(left: marginLeft, right: marginRight),
-                                  // Enters the digit on finger down, not release. Screen readers
-                                  // send no pointer events, so they use the Semantics tap.
-                                  child: Semantics(
-                                    label: '$index',
-                                    button: true,
-                                    excludeSemantics: true,
-                                    onTap: () => _pressDigit(index),
-                                    child: Listener(
-                                      onPointerDown: (_) => _pressDigit(index),
-                                      child: TextButton(
-                                        key: ValueKey('pin_code_button_${index}_key'),
-                                        onPressed: () {},
-                                        style: TextButton.styleFrom(
-                                          backgroundColor:
-                                              Theme.of(context).colorScheme.surfaceContainer,
-                                          shape: CircleBorder(),
-                                        ),
+                                  // Enters the digit on finger down, not release. The tap
+                                  // recognizer yields to a competing drag, so a swipe that
+                                  // starts on a digit doesn't enter it.
+                                  child: Material(
+                                    key: ValueKey('pin_code_button_${index}_key'),
+                                    color: Theme.of(context).colorScheme.surfaceContainer,
+                                    shape: CircleBorder(),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: InkWell(
+                                      onTapDown: (_) => _pressDigit(index),
+                                      onTap: () {},
+                                      child: Center(
                                         child: Text('$index',
                                             style: Theme.of(context)
                                                 .textTheme
