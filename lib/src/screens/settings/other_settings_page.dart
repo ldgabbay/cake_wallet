@@ -140,6 +140,9 @@ class OtherSettingsPage extends BasePage {
                   HardwareWalletType.cupcake,
                   HardwareWalletType.coldcard,
                   HardwareWalletType.seedsigner,
+                  // Keystone only signs Monero here.
+                  if (_otherSettingsViewModel.walletType == WalletType.monero)
+                    HardwareWalletType.keystone,
                 ],
                 "onSelect": (BuildContext context, HardwareWalletType hwType) async {
                   await _otherSettingsViewModel.onHardwareWalletTypeChanged(hwType);

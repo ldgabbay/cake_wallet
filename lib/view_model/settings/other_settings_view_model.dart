@@ -96,6 +96,7 @@ abstract class OtherSettingsViewModelBase with Store {
         HardwareWalletType.cupcake,
         HardwareWalletType.coldcard,
         HardwareWalletType.seedsigner,
+        HardwareWalletType.keystone,
       ].contains(_wallet.hardwareWalletType);
 
   @computed
