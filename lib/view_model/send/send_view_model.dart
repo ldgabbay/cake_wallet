@@ -123,7 +123,8 @@ abstract class SendViewModelBase extends WalletChangeListenerViewModel with Stor
         fiatFromSettings = _appStore.settingsStore.fiatCurrency,
         fiatCurrencies = FiatCurrency.all,
         super(appStore: _appStore) {
-    outputs.add(Output(wallet, _appStore, _fiatConversationStore, _outputCryptoCurrencyHandler));
+    outputs.add(Output(wallet, _appStore, _fiatConversationStore, _outputCryptoCurrencyHandler,
+        destinations: () => outputs.length));
 
     unspentCoinsListViewModel.initialSetup();
     // .then((_) => unspentCoinsListViewModel.resetUnspentCoinsInfoSelections());
@@ -179,7 +180,8 @@ abstract class SendViewModelBase extends WalletChangeListenerViewModel with Stor
 
   @action
   void addOutput() =>
-      outputs.add(Output(wallet, _appStore, _fiatConversationStore, _outputCryptoCurrencyHandler));
+      outputs.add(Output(wallet, _appStore, _fiatConversationStore, _outputCryptoCurrencyHandler,
+          destinations: () => outputs.length));
 
   @action
   void removeOutput(Output output) {

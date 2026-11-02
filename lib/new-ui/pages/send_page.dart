@@ -463,6 +463,7 @@ class _NewSendPageState extends State<NewSendPage> {
                                     if (outputIndex == 0) {
                                       _setOutput(0);
                                     }
+                                    _refreshMaxAmount();
                                   },
                                 ),
                               if (widget.mode == SendPageModes.normal &&
@@ -475,6 +476,7 @@ class _NewSendPageState extends State<NewSendPage> {
                                     _addInputControllers();
                                     widget.sendViewModel.addOutput();
                                     _setOutput(widget.sendViewModel.outputs.length - 1);
+                                    _refreshMaxAmount();
                                   },
                                 ),
                               if (widget.mode.helpContent != null)

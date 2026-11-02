@@ -38,7 +38,8 @@ const String cryptoNumberPattern = '0.0';
 class Output = OutputBase with _$Output;
 
 abstract class OutputBase with Store {
-  OutputBase(this._wallet, this._appStore, this._fiatConversationStore, this.cryptoCurrencyHandler)
+  OutputBase(this._wallet, this._appStore, this._fiatConversationStore, this.cryptoCurrencyHandler,
+      {this.destinations = _one})
       : key = UniqueKey(),
         sendAll = false,
         cryptoAmount = '',
@@ -60,6 +61,11 @@ abstract class OutputBase with Store {
   }
 
   Key key;
+
+  /// How many recipients the transaction will have. Monero's fee depends on it.
+  final int Function() destinations;
+
+  static int _one() => 1;
 
   bool get useSatoshi => _appStore.amountParsingProxy.useSatoshi(cryptoCurrencyHandler());
 
@@ -151,7 +157,8 @@ abstract class OutputBase with Store {
       if (_wallet.type == WalletType.monero && priority != null) {
         try {
           final rate = await monero!.getFeePerByte(_wallet, priority);
-          fee = await monero!.estimateFee(_wallet, rate, sendAll: sendAll);
+          fee = await monero!.estimateFee(_wallet, rate,
+              sendAll: sendAll, destinations: destinations());
           feePerByte = rate;
         } catch (e) {
           feePerByte = null;
@@ -425,6 +432,7 @@ extension OutputCopyWith on Output {
       _appStore,
       _fiatConversationStore,
       cryptoCurrencyHandler,
+      destinations: destinations,
     );
 
     clone
