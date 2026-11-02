@@ -4,6 +4,7 @@ cd "$(dirname $0)"
 
 CW_DOCKER_REGISTRY="${CW_DOCKER_REGISTRY:-localhost/cake-tech/cake_wallet}"
 CW_DOCKER_USE_CLOUD="${CW_DOCKER_USE_CLOUD:-}"
+CW_DOCKER_NETWORK="${CW_DOCKER_NETWORK:-default}"
 IMAGE_PREFIX="android-deps"
 
 SCRIPT_DIR="$(pwd)"
@@ -178,6 +179,7 @@ build() {
   echo "==> building $name${extra}"
   docker build \
     --platform linux/amd64 \
+    --network  "$CW_DOCKER_NETWORK" \
     --file     "$SCRIPT_DIR/Dockerfile.${name}" \
     --tag      "$tag" \
     "$@" \
