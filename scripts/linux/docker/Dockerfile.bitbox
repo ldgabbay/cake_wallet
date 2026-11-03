@@ -2,6 +2,9 @@ ARG BASE_IMAGE
 FROM --platform=linux/amd64 ${BASE_IMAGE} AS build
 
 RUN mkdir -p /w/scripts
+ARG SUBMODULE_URL
+ARG SUBMODULE_REF
+COPY scripts/fetch_submodule.sh /w/scripts/fetch_submodule.sh
 COPY scripts/build_bitbox_flutter.sh /w/scripts/build_bitbox_flutter.sh
 RUN cd /w/scripts && /w/scripts/build_bitbox_flutter.sh
 
