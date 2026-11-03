@@ -318,6 +318,11 @@ jobs:
 
           echo "${{ secrets.MAIN_SECRETS_FILE }}" | base64 --decode > lib/.secrets.g.dart
 
+      - name: Check out monero_c
+        # linux/CMakeLists.txt finds the libraries under release/$(git describe --tags),
+        # and the extract skips the stages' .git directories.
+        run: git submodule update --init scripts/monero_c
+
       - name: Extract native dependencies
         run: ./scripts/linux/docker/build.sh --extract
 
