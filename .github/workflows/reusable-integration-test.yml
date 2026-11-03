@@ -181,7 +181,7 @@ jobs:
         if: ${{ !inputs.extract_only }}
         run: |
           env \
-            CW_DOCKER_REGISTRY=ghcr.io/cake-tech/cake_wallet \
+            CW_DOCKER_REGISTRY=ghcr.io/${{ github.repository }} \
             CW_DOCKER_USE_CLOUD=true \
             ./scripts/android/docker/build.sh
 
@@ -189,7 +189,7 @@ jobs:
         if: ${{ inputs.extract_only }}
         run: |
           env \
-            CW_DOCKER_REGISTRY=ghcr.io/cake-tech/cake_wallet \
+            CW_DOCKER_REGISTRY=ghcr.io/${{ github.repository }} \
             CW_DOCKER_USE_CLOUD=true \
             ./scripts/android/docker/build.sh --extract
 
