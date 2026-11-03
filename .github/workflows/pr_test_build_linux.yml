@@ -4,18 +4,22 @@ permissions:
   contents: read
   packages: write
 
-on: [pull_request]
+on:
+  pull_request:
+  push:
+    branches: [fork]
+  workflow_dispatch:
 
 defaults:
   run:
     shell: bash
 
 env:
-  CW_DOCKER_REGISTRY: ghcr.io/cake-tech/cake_wallet
+  CW_DOCKER_REGISTRY: ghcr.io/${{ github.repository }}
   CW_DOCKER_USE_CLOUD: "true"
 
 concurrency:
-  group: linux-${{ github.event.pull_request.number }}
+  group: linux-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -23,21 +27,24 @@ jobs:
     # Fork PRs don't have access to repository secrets, so the generated
     # lib/.secrets.g.dart would be empty and the build fails to compile.
     # Skip for forks, mirroring the Android workflow's internal-build guard.
-    if: github.event.pull_request.head.repo.fork == false
-    runs-on: puzl-ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+    runs-on: ubuntu-latest
     steps:
       - run: echo "internal PR"
 
   base:
     needs: guard
-    runs-on: puzl-ubuntu-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
         if: ${{ env.ACT != 'true' }}
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+      - name: Free disk space
+        # GitHub's runners leave about 14 GB free; the base image alone is 26 GB.
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache /usr/share/swift /usr/local/share/boost && df -h /
       - name: Docker sock permissions
         run: sudo chmod 666 /var/run/docker.sock || true
       - name: Log in to GitHub Container Registry
@@ -51,14 +58,17 @@ jobs:
 
   bitbox:
     needs: base
-    runs-on: puzl-ubuntu-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
         if: ${{ env.ACT != 'true' }}
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+      - name: Free disk space
+        # GitHub's runners leave about 14 GB free; the base image alone is 26 GB.
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache /usr/share/swift /usr/local/share/boost && df -h /
       - name: Docker sock permissions
         run: sudo chmod 666 /var/run/docker.sock || true
       - name: Log in to GitHub Container Registry
@@ -72,14 +82,17 @@ jobs:
 
   mwebd:
     needs: base
-    runs-on: puzl-ubuntu-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
         if: ${{ env.ACT != 'true' }}
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+      - name: Free disk space
+        # GitHub's runners leave about 14 GB free; the base image alone is 26 GB.
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache /usr/share/swift /usr/local/share/boost && df -h /
       - name: Docker sock permissions
         run: sudo chmod 666 /var/run/docker.sock || true
       - name: Log in to GitHub Container Registry
@@ -93,14 +106,17 @@ jobs:
 
   reown:
     needs: base
-    runs-on: puzl-ubuntu-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
         if: ${{ env.ACT != 'true' }}
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+      - name: Free disk space
+        # GitHub's runners leave about 14 GB free; the base image alone is 26 GB.
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache /usr/share/swift /usr/local/share/boost && df -h /
       - name: Docker sock permissions
         run: sudo chmod 666 /var/run/docker.sock || true
       - name: Log in to GitHub Container Registry
@@ -114,14 +130,17 @@ jobs:
 
   zcash:
     needs: base
-    runs-on: puzl-ubuntu-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
         if: ${{ env.ACT != 'true' }}
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+      - name: Free disk space
+        # GitHub's runners leave about 14 GB free; the base image alone is 26 GB.
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache /usr/share/swift /usr/local/share/boost && df -h /
       - name: Docker sock permissions
         run: sudo chmod 666 /var/run/docker.sock || true
       - name: Log in to GitHub Container Registry
@@ -135,14 +154,17 @@ jobs:
 
   torch:
     needs: base
-    runs-on: puzl-ubuntu-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
         if: ${{ env.ACT != 'true' }}
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+      - name: Free disk space
+        # GitHub's runners leave about 14 GB free; the base image alone is 26 GB.
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache /usr/share/swift /usr/local/share/boost && df -h /
       - name: Docker sock permissions
         run: sudo chmod 666 /var/run/docker.sock || true
       - name: Log in to GitHub Container Registry
@@ -156,7 +178,7 @@ jobs:
 
   monero:
     needs: base
-    runs-on: puzl-ubuntu-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 360
     strategy:
       matrix:
@@ -165,8 +187,11 @@ jobs:
       - uses: actions/checkout@v4
         if: ${{ env.ACT != 'true' }}
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+      - name: Free disk space
+        # GitHub's runners leave about 14 GB free; the base image alone is 26 GB.
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache /usr/share/swift /usr/local/share/boost && df -h /
       - name: Docker sock permissions
         run: sudo chmod 666 /var/run/docker.sock || true
       - name: Log in to GitHub Container Registry
@@ -180,14 +205,17 @@ jobs:
 
   monero_merge:
     needs: monero
-    runs-on: puzl-ubuntu-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
         if: ${{ env.ACT != 'true' }}
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+      - name: Free disk space
+        # GitHub's runners leave about 14 GB free; the base image alone is 26 GB.
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache /usr/share/swift /usr/local/share/boost && df -h /
       - name: Docker sock permissions
         run: sudo chmod 666 /var/run/docker.sock || true
       - name: Log in to GitHub Container Registry
@@ -201,14 +229,17 @@ jobs:
 
   final:
     needs: [bitbox, mwebd, reown, zcash, torch, monero_merge]
-    runs-on: puzl-ubuntu-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
         if: ${{ env.ACT != 'true' }}
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+      - name: Free disk space
+        # GitHub's runners leave about 14 GB free; the base image alone is 26 GB.
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache /usr/share/swift /usr/local/share/boost && df -h /
       - name: Docker sock permissions
         run: sudo chmod 666 /var/run/docker.sock || true
       - name: Log in to GitHub Container Registry
@@ -222,7 +253,7 @@ jobs:
 
   app:
     needs: final
-    runs-on: puzl-ubuntu-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 360
     container:
       image: ghcr.io/cake-tech/cake_wallet:debian13-flutter3.41.9-ndkr28-go1.24.1-ruststablenightly
@@ -240,8 +271,8 @@ jobs:
       - uses: actions/checkout@v4
         if: ${{ env.ACT != 'true' }}
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
 
       - name: Docker sock permissions
         run: sudo chmod 666 /var/run/docker.sock || true

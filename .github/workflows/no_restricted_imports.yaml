@@ -4,7 +4,7 @@ on: [pull_request]
 
 jobs:
   check_restricted_imports:
-    runs-on: puzl-ubuntu-latest
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
