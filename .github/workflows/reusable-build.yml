@@ -367,8 +367,19 @@ jobs:
         run: |
           ./scripts/android/generate_dev_keystore.sh android/app/key.jks
 
+      - name: Free host disk space
+        # The job runs in a container, so reach the host's disk through the docker socket.
+        run: |
+          docker run --rm -v /:/host alpine rm -rf /host/usr/share/dotnet /host/usr/local/lib/android /host/opt/ghc /host/opt/hostedtoolcache /host/usr/share/swift /host/usr/local/share/boost
+          df -h /
+
       - name: Extract native dependencies
         run: ./scripts/android/docker/build.sh --extract
+
+      - name: Reclaim the space the dependency images took
+        run: |
+          docker system prune -af > /dev/null
+          df -h /
 
       - name: Execute Build and Setup Commands
         run: |
