@@ -7,14 +7,18 @@ ARG SUBMODULE_REF
 COPY scripts/fetch_submodule.sh /w/scripts/fetch_submodule.sh
 COPY scripts/prepare_torch.sh /w/scripts/prepare_torch.sh
 COPY scripts/android/build_torch.sh /w/scripts/android/build_torch.sh
+# GNU configure refuses to run as root, and simplybs passes no environment
+# through to bypass that, so the build runs as builder. It reads the
+# toolchain in /root in place, since chowning /root would copy every file
+# up through the overlay, and keeps its own caches in its home.
 ARG UID=10001
 ARG GID=10001
 ARG USER=builder
 RUN groupadd -g "$GID" "$USER" && \
     useradd  -m -u "$UID" -g "$GID" -s /bin/bash "$USER"
-
-RUN sudo chown $UID:$GID -R /w /root
+RUN chmod 755 /root && chown -R $UID:$GID /w
 USER builder
+ENV HOME=/home/builder GOPATH=/home/builder/go CARGO_HOME=/home/builder/.cargo RUSTUP_HOME=/root/.rustup
 
 ARG TARGET
 RUN if [ -n "$TARGET" ]; then \
