@@ -24,7 +24,9 @@ Everything else runs inside Docker, in the image Cake's own builds use.
   them under emulation; only Linux x86_64 has been tried.
 - [Docker Engine](https://docs.docker.com/engine/install/), with your user
   allowed to run `docker` (the `docker` group).
-- `git`, `make`, `rsync`, `bash` and GNU coreutils.
+- `git`, `make`, `rsync`, `bash`, `sed`, GNU coreutils and findutils. On
+  Debian or Ubuntu, `sudo apt install git make rsync` covers the ones a base
+  install lacks.
 - Disk: about 150 GB free. A first build used about 110 GB: 31 GB of images,
   45 GB of Docker build cache, 24 GB in the cache volumes and 7 GB of tree.
 - Time: the first build compiles every native library (Monero, Wownero, Zano,
