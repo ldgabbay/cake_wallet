@@ -50,6 +50,10 @@ You don't need Flutter, the Android SDK, the NDK, Rust or Go on the host.
    The Dart and Gradle caches stay in the Docker volumes `cake-pub-cache` and
    `cake-gradle`.
 
+The build downloads a lot, and a failed fetch (an HTTP 504 from GitHub, say)
+stops it. Run `make` again: it resumes from the first stage that hadn't
+finished.
+
 ## Signing key and secrets
 
 On the first build `make` creates:
