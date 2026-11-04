@@ -266,7 +266,9 @@ extract_final() {
     cd "$REPO_ROOT"
     docker cp temp_extract:/w.top w.top
     # Clones in the stages carry .git; the repo keeps its own submodule links.
-    rsync -av --exclude=.git w.top/ .
+    # The repo links these two to the root pubspec_overrides.yaml; keep the links.
+    rsync -av --exclude=.git --exclude=/cw_decred/pubspec_overrides.yaml \
+      --exclude=/cw_mweb/pubspec_overrides.yaml w.top/ .
     rm -rf w.top
     docker rm temp_extract
     echo "cache ok"
